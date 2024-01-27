@@ -27,12 +27,19 @@ def check_bw_installation():
             print("Failed to install Bitwarden CLI. Please install it manually.")
             sys.exit(1)
 
-def bw_show_env():
-    bw_session = os.getenv('BW_SESSION')
-    if bw_session:
-        print("BW_SESSION=[Redacted]")
-    else:
-        print("BW_SESSION is not set.")
+def create_setup_script():
+    with open('.lab-x/.sh', 'w') as file:
+        file.write("#!/bin/sh\n")
+        file.write("echo 'Log in to Bitwarden'\n")
+        file.write("bw login\n")
+        file.write("echo 'After logging in, run: export BW_SESSION=...'\n")
+    print("Created sh .lab-x/setup.sh. Please run it to log in to Bitwarden.")
+
+def check_bw_login_status():
+    status_output = run_command('bw status')
+    if not status_output or '"status":"unlocked"' not in status_output:
+        create_setup_script()
+        sys.exit(0)
 
 def bw_ensure_login():
     status_output = run_command('bw status')
@@ -70,7 +77,7 @@ def create_subfolders(base_folder):
 
 # Main Execution
 check_bw_installation()
-bw_show_env()
+check_bw_login_status()
 bw_ensure_login()
 host_folder = determine_host_folder()
 create_folder_if_not_exists(host_folder)
